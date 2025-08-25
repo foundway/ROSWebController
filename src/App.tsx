@@ -2,6 +2,7 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { Suspense, useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Slider } from '@/components/ui/slider'
 import './App.css'
 
 // Custom hook for ROS connection management
@@ -178,7 +179,29 @@ const App = () => {
             </span>
           </p>
         </div>
-        <TopicListener ros={ros} />
+        <div className="flex flex-col items-center gap-8 p-12">
+          <TopicListener ros={ros} />
+          <Slider defaultValue={[50]} max={100} min={0} onValueChange={(value) => {
+            if (ros) {
+              const motionCommandTopic = new (window as any).ROSLIB.Topic({
+                ros,
+                name: "motion/command",
+                messageType: "ainex_interfaces/MotionCommand",
+              })
+              motionCommandTopic.publish({
+                servo_id: [13], 
+                position: [Math.round(value[0]*10)], // Convert to integer
+                duration: [1000]
+              })
+              console.log('Published motion command:', {
+                servo_id: [13], 
+                position: [Math.round(value[0]*10)], 
+                duration: [1000]
+              })
+            }
+            console.log('Slider value:', value)
+          }} />
+        </div>
         <div className="flex justify-center mb-6">
           <Button 
             onClick={() => setIsAdvanced(!isAdvanced)}
